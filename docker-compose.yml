@@ -1,0 +1,11 @@
+version: "3"
+services:
+  # Custom datascience-notebook, for us to use
+  jupyter_process_mining:
+    build: .
+    image: cstone157/jupyter_process_mining
+    volumes:
+    - ./work:/home/jovyan/work
+    ports:
+    - 8889:8888
+    container_name: jupyter_process_mining

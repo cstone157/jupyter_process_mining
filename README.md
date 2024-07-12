@@ -1,2 +1,2 @@
 # jupyter_datacamp
-Project for all of the datacamp projects/tutorials that I've worked on
+Project for process mining training / practice

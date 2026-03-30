@@ -1,7 +1,9 @@
-import random
-import json
 from datetime import datetime, timedelta
+import json
+import random
 from typing import List, Dict, Any
+
+from value_gen import *
 
 def generate_process_instance(states: List[Dict[str, Any]], start_time: datetime) -> List[Dict[str, Any]]:
     """
@@ -30,6 +32,14 @@ def generate_process_instance(states: List[Dict[str, Any]], start_time: datetime
             "name": current_state["name"],
             "timestamp": current_time.isoformat(),
         }
+        if "additional_fields" in current_state:
+            for field in current_state["additional_fields"]:
+                if field["type"] == "string_enum":
+                    event = generated_string_enum_value(field, event)
+                elif field["type"] == "integer_range":
+                    event = generated_integer_range_value(field, event)
+                elif field["type"] == "timestamp_range":
+                    event = generated_timestamp_range_value(field, event, timestamp=current_time)
         instance.append(event)
         
         # Check if process completes
@@ -59,10 +69,27 @@ def generate_json_objects(count: int,
         name_prefix: str = "OBJ", name_seperator: str = "", name_offset_max: int = 5, 
         created_at: datetime = None, created_at_offset_max: int = 0,
         states: List[Dict[str, Any]] = [
-            {"name": "StateA", "initial": True, "min_time": 10, "max_time": 35, "odds_of_complete": 0.2, "next_states": [{"name": "StateB", "odds": 0.5}, {"name": "StateC", "odds": 0.5}]},
-            {"name": "StateB", "initial": False, "min_time": 30, "max_time": 180, "odds_of_complete": 0.3, "next_states": [{"name": "StateD", "odds": 1.0}]},
-            {"name": "StateC", "initial": False, "min_time": 90, "max_time": 560, "odds_of_complete": 0.4, "next_states": [{"name": "StateA", "odds": 0.2}, {"name": "StateD", "odds": 0.8}]},
-            {"name": "StateD", "initial": False, "min_time": 120, "max_time": 480, "odds_of_complete": 0.8, "next_states": [{"name": "StateB", "odds": 1.0}]}
+            {
+                "name": "StateA", "initial": True, "min_time": 10, "max_time": 35, "odds_of_complete": 0.2, 
+                "next_states": [{"name": "StateB", "odds": 0.5}, {"name": "StateC", "odds": 0.5}],
+                "additional_fields": [{"type": "string_enum", "column_name": "sub_category", "values": [{"value": "X", "odds": 0.7}, {"value": "Y", "odds": 0.3}]}]
+            },
+            {
+                "name": "StateB", "initial": False, "min_time": 30, "max_time": 180, "odds_of_complete": 0.3, 
+                "next_states": [{"name": "StateD", "odds": 1.0}]
+            },
+            {
+                "name": "StateC", "initial": False, "min_time": 90, "max_time": 560, "odds_of_complete": 0.4, 
+                "next_states": [{"name": "StateA", "odds": 0.2}, {"name": "StateD", "odds": 0.8}]
+            },
+            {
+                "name": "StateD", "initial": False, "min_time": 120, "max_time": 480, "odds_of_complete": 0.8, 
+                "next_states": [{"name": "StateB", "odds": 1.0}]
+            }
+        ],
+        additional_fields: List[Dict[str, Any]] = [
+            {"type": "string_enum", "column_name": "category", "values": [{"value": "A", "odds": 0.5}, {"value": "B", "odds": 0.3}, {"value": "C", "odds": 0.2}]},
+            {"type": "integer_range", "column_name": "priority", "min": 1, "max": 5}
         ]) -> List[Dict[str, Any]]:
     """
     Generate an array of JSON objects with uid, name, and created_at fields.
@@ -74,6 +101,7 @@ def generate_json_objects(count: int,
         name_offset_max: Maximum offset for the name field (defaults to 1)
         created_at: Datetime for the created_at field (defaults to current datetime)
         created_at_offset_max: Maximum offset for the created_at field (defaults to 0)
+        states: List of state definitions for generating process instances (defaults to predefined states)
 
     Returns:
         List of dictionaries with uid, name, and created_at fields
@@ -92,6 +120,14 @@ def generate_json_objects(count: int,
             "created_at": created_at_with_offset.isoformat(),
             "states": generate_process_instance(states, created_at_with_offset)
         }
+        if additional_fields:
+            for field in additional_fields:
+                if field["type"] == "string_enum":
+                    obj = generated_string_enum_value(field, obj)
+                elif field["type"] == "integer_range":
+                    obj = generated_integer_range_value(field, obj)
+                elif field["type"] == "timestamp_range":
+                    obj = generated_timestamp_range_value(field, obj, timestamp=created_at_with_offset)
         objects.append(obj)
     
     return objects

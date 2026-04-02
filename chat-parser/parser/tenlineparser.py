@@ -60,8 +60,9 @@ class TenLineParser:
             return None
 
         ## Loop throught the rows of our matches
+        print(f"{row}")
         for match_index, match_row in potential_matches.iterrows():
-            
+            print(f"==> self.time_diff_col: {self.time_diff_col}, match_index: {match_index}, index: {index}")
             a = len(row[self.time_diff_col]) > 0 and row[self.time_diff_col][match_index] is not None
             b = len(match_row[self.time_diff_col]) > 0 and match_row[self.time_diff_col][index] is not None
             ## If both already have a match then go ahead and leave
